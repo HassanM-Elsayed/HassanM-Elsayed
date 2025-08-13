@@ -1,0 +1,47 @@
+<!-- Toast Component -->
+<p-toast></p-toast>
+
+<!-- File Upload Area -->
+<div class="file-upload-area"
+     *ngIf="showFileUploadControl"
+     (dragover)="onDragOver($event)"
+     (dragleave)="onDragLeave($event)"
+     (drop)="onDrop($event)"
+     [class.dragover]="isDragging">
+     <input type="file"
+         #fileInput
+         [accept]="accept"
+         [multiple]="multiple"
+         (change)="onFileSelected($event)"
+         class="file-input">
+  <div class="upload-prompt">
+    <i class="bi bi-file-pdf"></i>
+    <!-- <h4>{{ 'incoming_page.FILE_UPLOAD.DRAG_DROP' | translate }}</h4> -->
+    <p>{{ 'incoming_page.FILE_UPLOAD.CLICK_OR_DRAG' | translate }}</p>
+    <small class="text-muted">{{ 'incoming_page.FILE_UPLOAD.SUPPORTED_FORMATS' | translate }}: PDF</small>
+  </div>
+</div>
+
+<!-- Loading Spinner -->
+ <div class="loading-overlay" *ngIf="isLoading">
+  <div class="loading-content">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">{{ 'FILE_UPLOAD.PROCESSING' | translate }}</p>
+  </div>
+</div>
+
+<!-- File Preview -->
+<div class="file-preview-container" *ngFor="let file of files; let i = index">
+  <div class="preview-content">
+    <iframe
+      *ngIf="file.url"
+      [src]="file.url | safe"
+      width="100%"
+      height="700px"
+      frameborder="0"
+      style="object-fit: contain; width: 100%; height: 700px; min-height: 500px;">
+    </iframe>
+  </div>
+</div>

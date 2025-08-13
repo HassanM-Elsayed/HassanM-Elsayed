@@ -1,0 +1,356 @@
+<c-row class="mt-2">
+  <c-row class="mb-4 align-right">
+    <c-col>
+      <button cButton color="primary" class="preview-btn" (click)="viewInPDFWithService()">
+        <fa-icon [icon]="faEye" class="me-2"></fa-icon>
+        {{ 'OUTGOING_PAGE.PREVIEW.TITLE' | translate }}
+      </button>
+    </c-col>
+  </c-row>
+
+  <c-row>
+    <c-card class="mb-4 professional-card">
+      <c-card-header>
+        <span class="section-title">
+          <fa-icon [icon]="faEdit" class="me-2"></fa-icon>
+          {{ "OUTGOING_PAGE.DOCUMENT_CREATION.TITLE" | translate }}
+        </span>
+      </c-card-header>
+      <c-card-body>
+        <!-- TinyMCE Editor always visible above tabs -->
+        <ecm-tinymce-editor [formControl]="tHtmlControl" [useFormControl]="true"
+          (contentChange)="onContentChange($event)" class="enhanced-editor"></ecm-tinymce-editor>
+
+        <!-- Includes section (barcode, stamp, confidential, reply required) directly under editor -->
+        <c-row class="options-row mt-3">
+          <c-col xs="2" *ngIf="!hideBarcode" class="option-item">
+            <label cLabel for="barcode" class="text_bold_700 margin_right_15">
+              <fa-icon [icon]="faBarcode" class="me-1"></fa-icon>
+              {{ "OUTGOING_PAGE.DOCUMENT_CREATION.INCLUDE_BARCODE" | translate }}
+            </label>
+            <c-form-check [switch]="true">
+              <input id="barcode" cFormCheckInput [checked]="formGroup.get('barcode')?.value" type="checkbox"
+                (change)="changeEvent($event, 'barcode')" />
+            </c-form-check>
+          </c-col>
+          <c-col xs="2" *ngIf="!hideStamp" class="option-item">
+            <label cLabel for="stamp" class="text_bold_700 margin_right_15">
+              <fa-icon [icon]="faStamp" class="me-1"></fa-icon>
+              {{ "OUTGOING_PAGE.DOCUMENT_CREATION.INCLUDE_STAMP" | translate }}
+            </label>
+            <c-form-check [switch]="true">
+              <input id="stamp" cFormCheckInput [checked]="false" type="checkbox"
+                (change)="changeEvent($event, 'stamp')" />
+            </c-form-check>
+          </c-col>
+          <c-col xs="2" class="option-item">
+            <label cLabel for="confidential" class="text_bold_700 margin_right_15">
+              <fa-icon [icon]="faShieldAlt" class="me-1"></fa-icon>
+              {{ "OUTGOING_PAGE.DOCUMENT_CREATION.CONFIDENTIAL" | translate }}
+            </label>
+            <c-form-check [switch]="true">
+              <input id="confidential" cFormCheckInput [checked]="formGroup.get('confidential')?.value" type="checkbox"
+                (change)="changeEvent($event, 'confidential')" />
+            </c-form-check>
+          </c-col>
+          <c-col xs="2" class="option-item">
+            <label cLabel for="reply-required" class="text_bold_700 margin_right_15">
+              <fa-icon [icon]="faReply" class="me-1"></fa-icon>
+              {{ "OUTGOING_PAGE.DOCUMENT_CREATION.REPLY_REQUIRED" | translate }}
+            </label>
+            <c-form-check [switch]="true">
+              <input id="reply-required" cFormCheckInput [checked]="formGroup.get('required')?.value" type="checkbox"
+                (change)="changeEvent($event, 'required')" />
+            </c-form-check>
+          </c-col>
+        </c-row>
+      </c-card-body>
+    </c-card>
+  </c-row>
+
+  <!-- Standalone card for tabs -->
+  <c-row>
+    <c-col>
+      <c-card class="mb-4 professional-card">
+        <c-card-header>
+          <span class="section-title">
+            <fa-icon [icon]="faUser" class="me-2"></fa-icon>
+            {{ 'OUTGOING_PAGE.DOCUMENT_CREATION.DISTRIBUTION_PLAN_TITLE' | translate }}
+          </span>
+        </c-card-header>
+        <c-card-body>
+          <c-tabs [activeItemKey]="activeTab" (activeItemKeyChange)="activeTab = $event" class="mt-4">
+            <c-tabs-list variant="underline-border" class="mb-3">
+              <button cTab [itemKey]="0"><fa-icon [icon]="faLink" class="me-1"></fa-icon>{{
+                'OUTGOING_PAGE.DOCUMENT_CREATION.CORRELATED_TAB' | translate }}</button>
+              <button cTab [itemKey]="1"><fa-icon [icon]="faPaperclip" class="me-1"></fa-icon>{{
+                'OUTGOING_PAGE.DOCUMENT_CREATION.ATTACHMENTS_TAB' | translate }}</button>
+              <button cTab [itemKey]="2"><fa-icon [icon]="faTable" class="me-1"></fa-icon>{{
+                'OUTGOING_PAGE.DOCUMENT_CREATION.DOCUMENT_DETAILS_TAB' | translate }}</button>
+              <button cTab [itemKey]="3"><fa-icon [icon]="faUser" class="me-1"></fa-icon>{{
+                'OUTGOING_PAGE.DOCUMENT_CREATION.DISTRIBUTION_PLAN_TAB' | translate }}</button>
+            </c-tabs-list>
+            <c-tabs-content>
+              <c-tab-panel [itemKey]="0">
+                <!-- Correlated Correspondence -->
+         <correlated-correspondence
+  [fetchItems]="getCorrespondence"
+  [selectedItemsToPopulateFromParent]="selectedItemsToPopulateFromParent"
+  (selectionChange)="handleC($event)">
+</correlated-correspondence>
+              </c-tab-panel>
+              <c-tab-panel [itemKey]="1">
+                <!-- Attachments -->
+                <c-row class="attachment-section">
+                  <c-col class="mb-2">
+                    <label cLabel for="file" class="text_bold_700 margin_right_15">
+                      <fa-icon [icon]="faPaperclip" class="me-1"></fa-icon>
+                      {{ "OUTGOING_PAGE.DOCUMENT_CREATION.NEW_ATTACHMENTS" | translate }}
+                    </label>
+                    <input type="file" id="file" multiple class="enhanced-file-input"
+                      (change)="onFileSelected($event)" />
+                  </c-col>
+                </c-row>
+                <c-row>
+                  <div class="drop-zone" [class.dragover]="isDragging" (drop)="onDrop($event)"
+                    (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)">
+                    <fa-icon [icon]="faCloudUploadAlt" class="fs-1 text-primary mb-3"></fa-icon>
+                    <p class="upload-text">
+                      {{ "OUTGOING_PAGE.DOCUMENT_CREATION.DRAG_FILES" | translate }}
+                    </p>
+                  </div>
+                </c-row>
+
+                <!-- Existing attachments (edit mode) -->
+                <!-- Existing attachments (edit mode) -->
+                <c-row *ngIf="isEdit && (existingAttachmentsLoading || existingAttachments.length > 0)" class="mt-3">
+                  <c-col>
+                    <label cLabel class="text_bold_700 margin_right_15">
+                      <fa-icon [icon]="faPaperclip" class="me-1"></fa-icon>
+                      {{ 'OUTGOING_PAGE.DOCUMENT_CREATION.EXISTING_ATTACHMENTS' | translate }}
+                    </label>
+
+                    <div *ngIf="existingAttachmentsLoading">
+                      {{ 'FETCHING_DATA' | translate }}
+                    </div>
+
+                    <!-- Enhanced, consistent UI with new attachments -->
+                    <div *ngIf="!existingAttachmentsLoading && existingAttachments.length > 0" class="file-list">
+                      <c-row class="mt-2" *ngFor="let att of existingAttachments">
+                        <c-col class="file-item" [ngClass]="{ 'opacity-50': att._markedForDeletion }">
+                          <div class="file-info">
+                            <div class="file-name">
+                              <fa-icon [icon]="faFile" class="me-2"></fa-icon>
+
+                              <span class="me-2"
+                                [ngClass]="{ 'text-decoration-line-through text-muted': att._markedForDeletion }"
+                                [title]="att.title">
+                                {{ att.title }}
+                              </span>
+
+                              <!-- <span class="badge bg-info ms-2">{{ 'OUTGOING_PAGE.DOCUMENT_CREATION.EXISTING' | translate
+                                }}</span> -->
+
+                              <span *ngIf="att._markedForDeletion" class="badge bg-danger ms-2">
+                                {{ 'OUTGOING_PAGE.DOCUMENT_CREATION.MARKED_FOR_DELETION' | translate }}
+                              </span>
+
+                              <!-- Actions: View (modal) / Download -->
+                              <button cButton color="secondary" variant="ghost" size="sm" class="ms-3 p-0" type="button"
+                                (click)="openExistingAttachment(att)" [title]="'COMMON.VIEW' | translate"
+                                [attr.aria-label]="'COMMON.VIEW' | translate">
+                                <fa-icon [icon]="faEye" class="me-1"></fa-icon>
+                                <span class="d-none d-md-inline">{{ 'COMMON.VIEW' | translate }}</span>
+                              </button>
+                              <button cButton color="secondary" variant="ghost" size="sm" class="ms-2 p-0" type="button"
+                                (click)="downloadExistingAttachment(att)" [title]="'COMMON.DOWNLOAD' | translate"
+                                [attr.aria-label]="'COMMON.DOWNLOAD' | translate">
+                                <fa-icon [icon]="faDownload" class="me-1"></fa-icon>
+                                <span class="d-none d-md-inline">{{ 'COMMON.DOWNLOAD' | translate }}</span>
+                              </button>
+                            </div>
+
+                            <div class="file-size">
+                              {{ att.fileSize }}
+                            </div>
+                          </div>
+
+                          <!-- Keep delete icon consistent with "new attachment" style -->
+                          <button class="remove-btn" type="button" (click)="toggleDeleteExisting(att)"
+                            [title]="att._markedForDeletion ? ('CANCEL' | translate) : ('COMMON.DELETE' | translate)"
+                            [attr.aria-label]="att._markedForDeletion ? ('CANCEL' | translate) : ('COMMON.DELETE' | translate)">
+                            <fa-icon [icon]="faTimes"></fa-icon>
+                          </button>
+                        </c-col>
+                      </c-row>
+                    </div>
+                  </c-col>
+                </c-row>
+
+                <div *ngIf="files.length > 0" class="file-list">
+                  <c-row class="mt-2" *ngFor="let file of files; let i = index">
+                    <c-col class="file-item">
+                      <div class="file-info">
+                        <div class="file-name">
+                          <fa-icon [icon]="faFile" class="me-2"></fa-icon>
+                          {{ file.name }}
+                          <!-- Distinct color for "New" -->
+                          <span class="badge bg-warning text-dark ms-2">
+                            {{ 'OUTGOING_PAGE.DOCUMENT_CREATION.NEW' | translate }}
+                          </span>
+
+                          <!-- View (modal) for new File objects -->
+                          <button cButton color="secondary" variant="ghost" size="sm" class="ms-3 p-0" type="button"
+                            (click)="openNewAttachment(file)" [title]="'COMMON.VIEW' | translate"
+                            [attr.aria-label]="'COMMON.VIEW' | translate">
+                            <fa-icon [icon]="faEye" class="me-1"></fa-icon>
+                            <span class="d-none d-md-inline">{{ 'COMMON.VIEW' | translate }}</span>
+                          </button>
+                        </div>
+
+                        <div class="file-size">
+                          {{ file.size | number }} bytes
+                        </div>
+                      </div>
+
+                      <button class="remove-btn" type="button" (click)="removeFile(i)"
+                        [title]="'COMMON.DELETE' | translate" [attr.aria-label]="'COMMON.DELETE' | translate">
+                        <fa-icon [icon]="faTimes"></fa-icon>
+                      </button>
+                    </c-col>
+                  </c-row>
+                </div>
+
+
+
+
+
+              </c-tab-panel>
+              <c-tab-panel [itemKey]="2">
+                <!-- Document Details Table -->
+                <c-row>
+                  <c-card class="mb-4 professional-card">
+                    <c-card-body>
+                      <table cTable class="table table-bordered table-striped table-hover enhanced-table align-middle">
+                        <thead>
+                          <tr>
+                            <th>{{ 'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.FIELD' | translate }}</th>
+                            <th>{{ 'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.NAME' | translate }}</th>
+                            <th>{{ 'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.TITLE' | translate }}</th>
+                            <th>{{ 'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.TITLE_ARABIC' | translate }}</th>
+                            <th>{{ 'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.RESPECTED' | translate }}</th>
+                            <th>{{ 'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.RESPECTED_ARABIC' | translate }}</th>
+                            <th>{{ 'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.COMMENTS' | translate }}</th>
+                            <th>{{ 'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.COMMENTS_ARABIC' | translate }}</th>
+                            <th></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr
+                            *ngFor="let item of formGroup.get('documentDetails')?.value; let i = index; trackBy: trackByCorrId">
+                            <td>
+                              <span class="badge" [class]="item.type === 'cc' ? 'bg-info' : 'bg-primary'">
+                                {{ item.type === 'cc' ? ('OUTGOING_PAGE.METADATA.CC' | translate) :
+                                ('OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.TO' | translate) }}
+                              </span>
+                            </td>
+                            <td>
+                              <input [value]="item.fullName" readonly
+                                [placeholder]="'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.NAME' | translate" cFormControl
+                                type="text" class="form-control enhanced-input" />
+                            </td>
+                            <td>
+                              <input [(ngModel)]="item.titleText" name="titleText-{{i}}"
+                                [placeholder]="'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.TITLE' | translate" cFormControl
+                                type="text" class="form-control enhanced-input" />
+                            </td>
+                            <td>
+                              <input [(ngModel)]="item.titleTextAr" name="titleTextAr-{{i}}"
+                                [placeholder]="'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.TITLE_ARABIC' | translate"
+                                cFormControl type="text" class="form-control enhanced-input" />
+                            </td>
+                            <td>
+                              <input [(ngModel)]="item.respectedText" name="respectedText-{{i}}"
+                                [placeholder]="'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.RESPECTED' | translate"
+                                cFormControl type="text" class="form-control enhanced-input" />
+                            </td>
+                            <td>
+                              <input [(ngModel)]="item.respectedTextAr" name="respectedTextAr-{{i}}"
+                                [placeholder]="'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.RESPECTED_ARABIC' | translate"
+                                cFormControl type="text" class="form-control enhanced-input" />
+                            </td>
+                            <td>
+                              <input [(ngModel)]="item.commentsText" name="commentsText-{{i}}"
+                                [placeholder]="'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.COMMENTS' | translate"
+                                cFormControl type="text" class="form-control enhanced-input" />
+                            </td>
+                            <td>
+                              <input [(ngModel)]="item.commentsTextAr" name="commentsTextAr-{{i}}"
+                                [placeholder]="'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.COMMENTS_ARABIC' | translate"
+                                cFormControl type="text" class="form-control enhanced-input" />
+                            </td>
+                            <td>
+                              <button cButton type="button" class="save-action-btn" size="sm"
+                                (click)="saveTitleRespected(i)"
+                                [attr.aria-label]="('OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.SAVE' | translate) + ' ' + (item?.fullName || '')"
+                                [title]="'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.SAVE' | translate">
+                                <fa-icon [icon]="faSave" class="me-1"></fa-icon>
+                                <span class="d-none d-md-inline">{{ 'OUTGOING_PAGE.DOCUMENT_CREATION.TABLE.SAVE' |
+                                  translate }}</span>
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </c-card-body>
+                  </c-card>
+                </c-row>
+              </c-tab-panel>
+              <c-tab-panel [itemKey]="3">
+                <!-- Distribution Plan Tab -->
+                <distribution-form [formGroup]="distributionFormGroup" [parentForm]="parentForm"
+                  [isEdit]="parentForm.get('distribution')?.get('isEdit')?.value"
+                  [correspondenceId]="parentForm.get('distribution')?.get('correspondenceId')?.value"></distribution-form>
+              </c-tab-panel>
+            </c-tabs-content>
+          </c-tabs>
+        </c-card-body>
+      </c-card>
+    </c-col>
+  </c-row>
+
+
+</c-row>
+
+<!-- Enhanced Modal -->
+<c-modal #templatePreviewModal alignment="center" id="templatePreviewModal" [visible]="isModalVisible"
+  (visibleChange)="handleModalChange($event)" size="xl" class="enhanced-modal">
+  <c-modal-header>
+    <h5 cModalTitle>
+      <fa-icon [icon]="faEye" class="me-2"></fa-icon>
+      {{ 'OUTGOING_PAGE.PREVIEW.TITLE' | translate }}
+    </h5>
+    <button [cModalToggle]="templatePreviewModal.id" cButtonClose title="Close modal"></button>
+  </c-modal-header>
+  <c-modal-body>
+    <!-- Always show a spinner when loading OR when there are no files yet (prevents empty modal) -->
+    <ng-container *ngIf="isPreviewLoading || !(filesForViewer && filesForViewer.length > 0); else previewContent">
+      <div class="d-flex flex-column justify-content-center align-items-center" style="min-height:200px;"
+        aria-live="polite">
+        <span class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></span>
+        <span class="mt-3">{{ 'OUTGOING_PAGE.PREVIEW.LOADING' | translate }}</span>
+      </div>
+    </ng-container>
+    <ng-template #previewContent>
+      <file-viewer *ngIf="filesForViewer && filesForViewer.length > 0" [base64Files]="filesForViewer"
+        [showFileUploadControl]="false"></file-viewer>
+    </ng-template>
+  </c-modal-body>
+  <c-modal-footer>
+    <button [cModalToggle]="templatePreviewModal.id" cButton color="secondary">
+      <fa-icon [icon]="faTimes" class="me-2"></fa-icon>
+      {{ "COMMON.CLOSE" | translate }}
+    </button>
+  </c-modal-footer>
+</c-modal>
+<p-toast></p-toast>
